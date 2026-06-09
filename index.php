@@ -38,11 +38,17 @@ $flights = $stmt->fetchAll();
 
         .navbar { background: white; padding: 15px 80px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
         .logo { font-size: 26px; font-weight: bold; color: #1A73E8; text-decoration: none; font-style: italic; }
-        .nav-links a { margin-left: 25px; text-decoration: none; color: #444; font-weight: 500; }
+        .nav-links { display: flex; align-items: center; }
+        .nav-links span { margin-right: 15px; }
+        .nav-links a { margin-left: 20px; text-decoration: none; color: #444; font-weight: 500; }
         
-        .btn-login { background: #1A73E8; color: white !important; padding: 10px 22px; border-radius: 25px; transition: 0.3s ease; }
+        .btn-login { background: #1A73E8; color: white !important; padding: 10px 22px; border-radius: 25px; transition: 0.3s ease; margin-left: 20px; }
         .btn-login:hover { background: #1557b0; transform: scale(1.05); box-shadow: 0 4px 10px rgba(26,115,232,0.2); }
         
+        /* ড্যাশবোর্ড বাটনের প্রিমিয়াম স্টাইল */
+        .btn-dashboard { background: #E8F0FE; color: #1A73E8 !important; padding: 8px 18px; border-radius: 20px; font-weight: 600; border: 1px solid #1A73E8; transition: 0.3s ease; }
+        .btn-dashboard:hover { background: #1A73E8; color: white !important; transform: scale(1.03); }
+
         /* Premium Hero & Search Box Section */
         .hero { background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.2)), url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1353&q=80') no-repeat center center/cover; height: 420px; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; }
         .hero h1 { font-size: 38px; margin-bottom: 20px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); font-weight: 700; }
@@ -77,7 +83,7 @@ $flights = $stmt->fetchAll();
         .duration-line { text-align: center; color: #999; font-size: 12px; position: relative; width: 140px; }
         .duration-line::after { content: ''; display: block; width: 100%; height: 2px; background: #ccc; margin-top: 8px; }
         
-        /* ৩. চলন্ত উড়োজাহাজের (Moving Plane) চোখ ধাঁধানো অ্যানিমেশন */
+        /* ৩. চলন্ত উড়োজাহাজের (Moving Plane) চোখ ধাঁধানো অ্যানিমেশন */
         .duration-line::before {
             content: '✈';
             position: absolute;
@@ -116,9 +122,13 @@ $flights = $stmt->fetchAll();
         <div class="nav-links">
             <?php if(isset($_SESSION['user_name'])): ?>
                 <span>Welcome, <strong><?php echo ucwords(strtolower($_SESSION['user_name'])); ?></strong></span>
+                
+                <a href="dashboard.php" class="btn-dashboard">My Dashboard</a>
+                
                 <?php if($_SESSION['user_role'] == 'admin'): ?>
                     <a href="admin.php" style="color: red; font-weight: bold;">Admin Panel</a>
                 <?php endif; ?>
+                
                 <a href="logout.php">Logout</a>
             <?php else: ?>
                 <a href="login.php" class="btn-login">Sign In</a>

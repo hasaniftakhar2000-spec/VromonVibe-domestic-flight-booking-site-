@@ -27,6 +27,7 @@ $ticket_class = 'Economy Class';
 $final_price = $flight['price'];
 $payment_method = 'bKash';
 
+// 🛠️ এখানে ব্র্যাকেটের ভুলটি নিখুঁতভাবে ফিক্স করা হয়েছে
 if (isset($_POST['confirm_payment'])) {
     $passenger_name = $_POST['passenger_name'];
     $ticket_class = $_POST['ticket_class'];
@@ -34,9 +35,10 @@ if (isset($_POST['confirm_payment'])) {
     $final_price = $_POST['final_price'];
     $ticket_number = 'VV-' . strtoupper(uniqid()); // ইউনিক টিকিট PNR জেনারেশন
 
-    // ডেটাবেসে বুকিং সেভ করা (Create Operation)
+    // ডাটাবেসের অরিজিনাল কলাম অনুযায়ী কুয়েরি
     $stmt = $pdo->prepare("INSERT INTO bookings (user_id, flight_id, passenger_name, booking_date, ticket_number, payment_status) VALUES (?, ?, ?, ?, ?, 'Paid')");
     $stmt->execute([$_SESSION['user_id'], $flight_id, $passenger_name, $travel_date, $ticket_number]);
+    
     $show_ticket = true;
 }
 ?>
@@ -50,9 +52,10 @@ if (isset($_POST['confirm_payment'])) {
 
         body { 
             font-family: 'Poppins', 'Segoe UI', Arial, sans-serif; 
-            background-color: #f0f4f9; 
             margin: 0; 
             padding: 20px;
+            background-color: #f0f4f9; 
+            color: #333; 
             /* ১. পেজ লোড হওয়ার সুন্দর অ্যানিমেশন */
             animation: fadeInPage 0.6s ease-in-out;
         }
@@ -107,7 +110,7 @@ if (isset($_POST['confirm_payment'])) {
         }
         .method:hover { border-color: #1A73E8; transform: translateY(-2px); }
         
-        /* একটিভ পেমেন্ট কার্ডের চমৎকার গ্লো ইফেক্ট */
+        /* একটিভ পেমেন্ট কার্ডের চমৎকার গ্লো ইফ效ক্ট */
         .method.active { 
             border-color: #1A73E8; 
             color: #1A73E8; 
@@ -142,6 +145,7 @@ if (isset($_POST['confirm_payment'])) {
         .ticket-id { font-weight: 700; color: #E11D48; font-size: 16px; background: #ffe4e6; padding: 4px 12px; border-radius: 20px; }
         
         .ticket-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 10px; }
+        .ticket-field { display: flex; flex-direction: column; }
         .ticket-field label { font-size: 11px; color: #888; display: block; text-transform: uppercase; font-weight: bold; margin-bottom: 2px; }
         .ticket-field span { font-size: 15px; font-weight: 600; color: #222; }
         
@@ -154,7 +158,7 @@ if (isset($_POST['confirm_payment'])) {
             body * { visibility: hidden; } 
             .ticket, .ticket * { visibility: visible; } 
             .ticket { position: absolute; left: 0; top: 0; width: 100%; border: 2px solid #333; } 
-            .btn-print { display: none; } 
+            .btn-print, .btn-home-link { display: none !important; } 
         }
     </style>
 </head>
@@ -232,7 +236,7 @@ if (isset($_POST['confirm_payment'])) {
                 <div class="ticket-field"><label>Payment Mode</label><span><?php echo htmlspecialchars($payment_method); ?> (Paid)</span></div>
                 <div class="ticket-field"><label>Flight Number</label><span><?php echo htmlspecialchars($flight['flight_number']); ?> (<?php echo htmlspecialchars($flight['airline']); ?>)</span></div>
                 <div class="ticket-field"><label>Cabin Class</label><span style="color: #1A73E8;"><?php echo htmlspecialchars($ticket_class); ?></span></div>
-                <div class="ticket-field"><label>From City</label><span><?php echo htmlspecialchars($flight['from_city']); ?> (DAC)</span></div>
+                <div class="ticket-field"><label>From City</label><span><?php echo htmlspecialchars($flight['from_city']); ?></span></div>
                 <div class="ticket-field"><label>To City</label><span><?php echo htmlspecialchars($flight['to_city']); ?></span></div>
                 <div class="ticket-field"><label>Departure</label><span><?php echo date('H:i', strtotime($flight['departure_time'])); ?></span></div>
                 <div class="ticket-field"><label>Arrival</label><span><?php echo date('H:i', strtotime($flight['arrival_time'])); ?></span></div>
@@ -244,7 +248,7 @@ if (isset($_POST['confirm_payment'])) {
             </div>
         </div>
         <button onclick="window.print()" class="btn-print">Print E-Ticket to PDF 🖨</button>
-        <p style="text-align: center; margin-top: 20px; font-size: 14px;"><a href="index.php" style="color: #1A73E8; text-decoration: none; font-weight: bold;">← Return to Home</a></p>
+        <p class="btn-home-link" style="text-align: center; margin-top: 20px; font-size: 14px;"><a href="index.php" style="color: #1A73E8; text-decoration: none; font-weight: bold;">← Return to Home</a></p>
     </div>
 <?php endif; ?>
 

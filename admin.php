@@ -2,189 +2,116 @@
 session_start();
 require 'db.php';
 
-if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
-    header("Location: login.php");
+// ১. সিকিউরিটি চেক: ইউজার লগইন না থাকলে বা অ্যাডমিন না হলে হোমপেজে পাঠিয়ে দেবে
+if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
+    header("Location: index.php");
     exit;
 }
 
-$message = '';
-$update_mode = false;
-$id = ''; $flight_number = ''; $airline = ''; $from_city = ''; $to_city = ''; $departure_time = ''; $arrival_time = ''; $duration = ''; $price = '';
-
-// ১. CREATE (নতুন ফ্লাইট যোগ করা)
-if (isset($_POST['add_flight'])) {
-    $flight_number = $_POST['flight_number'];
-    $airline = $_POST['airline'];
-    $from_city = $_POST['from_city'];
-    $to_city = $_POST['to_city'];
-    $departure_time = $_POST['departure_time'];
-    $arrival_time = $_POST['arrival_time'];
-    $duration = $_POST['duration'];
-    $price = $_POST['price'];
-
-    $stmt = $pdo->prepare("INSERT INTO flights (flight_number, airline, from_city, to_city, departure_time, arrival_time, duration, price) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-    $stmt->execute([$flight_number, $airline, $from_city, $to_city, $departure_time, $arrival_time, $duration, $price]);
-    $message = "<p style='color: green; font-weight:bold;'>✓ Flight Added Successfully!</p>";
-}
-
-// ২. DELETE (ফ্লাইট ডিলিট করা)
-if (isset($_GET['delete'])) {
-    $del_id = $_GET['delete'];
-    $stmt = $pdo->prepare("DELETE FROM flights WHERE id = ?");
-    $stmt->execute([$del_id]);
-    header("Location: admin.php");
-    exit;
-}
-
-// ৩. UPDATE এর জন্য ডেটা ফেচ করা
-if (isset($_GET['edit'])) {
-    $update_mode = true;
-    $edit_id = $_GET['edit'];
-    $stmt = $pdo->prepare("SELECT * FROM flights WHERE id = ?");
-    $stmt->execute([$edit_id]);
-    $flight = $stmt->fetch();
+// 🛠️ ২. টিকিট ডিলিট করার অ্যাকশন হ্যান্ডলার
+if (isset($_GET['delete_booking_id'])) {
+    $booking_id = (int)$_GET['delete_booking_id'];
     
-    if ($flight) {
-        $id = $flight['id'];
-        $flight_number = $flight['flight_number'];
-        $airline = $flight['airline'];
-        $from_city = $flight['from_city'];
-        $to_city = $flight['to_city'];
-        $departure_time = $flight['departure_time'];
-        $arrival_time = $flight['arrival_time'];
-        $duration = $flight['duration'];
-        $price = $flight['price'];
-    }
-}
-
-// ৪. UPDATE সেভ করা
-if (isset($_POST['update_flight'])) {
-    $id = $_POST['id'];
-    $flight_number = $_POST['flight_number'];
-    $airline = $_POST['airline'];
-    $from_city = $_POST['from_city'];
-    $to_city = $_POST['to_city'];
-    $departure_time = $_POST['departure_time'];
-    $arrival_time = $_POST['arrival_time'];
-    $duration = $_POST['duration'];
-    $price = $_POST['price'];
-
-    $stmt = $pdo->prepare("UPDATE flights SET flight_number=?, airline=?, from_city=?, to_city=?, departure_time=?, arrival_time=?, duration=?, price=? WHERE id=?");
-    $stmt->execute([$flight_number, $airline, $from_city, $to_city, $departure_time, $arrival_time, $duration, $price, $id]);
-    header("Location: admin.php");
+    // ডাটাবেস থেকে নির্দিষ্ট টিকিটটি ডিলিট করা
+    $delete_stmt = $pdo->prepare("DELETE FROM bookings WHERE id = ?");
+    $delete_stmt->execute([$booking_id]);
+    
+    // ডিলিট হওয়ার পর সাকসেস মেসেজসহ পেজ রিফ্রেশ করা
+    header("Location: admin.php?status=success");
     exit;
 }
 
-// সব ফ্লাইটের ডেটা আনা
-$flights = $pdo->query("SELECT * FROM flights")->fetchAll();
-
-// নতুন ফিচার: ডেটাবেস জয়েন কুয়েরি দিয়ে সব প্যাসেঞ্জারের বুকিং হিস্ট্রি নিয়ে আসা
-$bookings = $pdo->query("
-    SELECT b.passenger_name, b.ticket_number, b.booking_date, f.flight_number, f.airline, f.from_city, f.to_city 
-    FROM bookings b 
-    JOIN flights f ON b.flight_id = f.id 
-    ORDER BY b.id DESC
-")->fetchAll();
+// ডাটাবেসের সব বুকিং বা টিকিট হিস্ট্রি তুলে আনা
+$stmt = $pdo->query("SELECT * FROM bookings ORDER BY id DESC");
+$all_bookings = $stmt->fetchAll();
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Admin Dashboard - VromonVibe</title>
+    <title>Admin Panel - Passenger Ticket Roster</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
-        body { font-family: 'Poppins', Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; }
-        .dashboard { max-width: 1100px; margin: 0 auto; background: white; padding: 35px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
-        h2, h3 { color: #1A73E8; font-weight: 700; }
-        h3 { border-bottom: 2px solid #f1f3f4; padding-bottom: 10px; margin-top: 40px; }
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
-        .form-group input { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
-        .btn { background: #1A73E8; color: white; padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 10px; font-family: 'Poppins', sans-serif; }
-        .btn-danger { background: #d93025; text-decoration: none; padding: 6px 12px; border-radius: 6px; color: white; font-size: 13px; }
-        .btn-edit { background: #f4b400; color: black; text-decoration: none; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: bold; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; border-radius: 8px; overflow: hidden; }
-        th, td { padding: 14px; border: 1px solid #eee; text-align: left; font-size: 14px; }
-        th { background-color: #f8fafc; color: #1A73E8; font-weight: 600; }
-        .nav-back { display: inline-block; margin-bottom: 20px; text-decoration: none; color: #1A73E8; font-weight: bold; }
-        .pnr-badge { background: #ffe4e6; color: #e11d48; padding: 3px 8px; border-radius: 12px; font-weight: bold; font-size: 12px; }
+        body { font-family: 'Poppins', sans-serif; background-color: #f0f4f9; margin: 0; padding: 30px; }
+        .admin-container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        h2 { color: #1e3a8a; margin-top: 0; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; }
+        
+        /* সাকসেস অ্যালার্ট */
+        .alert-success { background-color: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; padding: 12px; border-radius: 6px; margin-bottom: 20px; font-weight: 500; }
+        
+        /* টেবিল স্টাইল */
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
+        th, td { padding: 14px 18px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+        th { background-color: #1A73E8; color: white; font-weight: 600; }
+        tr:hover { background-color: #f8fafc; }
+        
+        .pnr-badge { font-weight: bold; color: #2563eb; background: #dbeafe; padding: 4px 8px; border-radius: 4px; font-family: monospace; }
+        .btn-delete { background: #ef4444; color: white; padding: 8px 14px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 13px; transition: 0.2s ease; border: none; cursor: pointer; }
+        .btn-delete:hover { background: #dc2626; transform: scale(1.02); }
+        .btn-back { background: #4b5563; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; display: inline-block; margin-top: 20px; font-weight: bold; }
+        .btn-back:hover { background: #374151; }
+        .no-data { text-align: center; color: #9ca3af; padding: 30px 0; font-style: italic; }
     </style>
 </head>
 <body>
-<div class="dashboard">
-    <a href="index.php" class="nav-back">← Back to Homepage</a>
-    <h2>VromonVibe Management Dashboard</h2>
-    <?php echo $message; ?>
-    
-    <form method="POST" class="form-group">
-        <h3><?php echo $update_mode ? "✏ Edit Flight Details" : "➕ Add New Flight Route"; ?></h3>
-        <div class="form-grid">
-            <input type="hidden" name="id" value="<?php echo $id; ?>">
-            <input type="text" name="flight_number" placeholder="Flight Number (e.g. VQ-901)" value="<?php echo htmlspecialchars($flight_number); ?>" required>
-            <input type="text" name="airline" placeholder="Airline Name (e.g. NOVOAIR)" value="<?php echo htmlspecialchars($airline); ?>" required>
-            <input type="text" name="from_city" placeholder="From City" value="<?php echo htmlspecialchars($from_city); ?>" required>
-            <input type="text" name="to_city" placeholder="To City" value="<?php echo htmlspecialchars($to_city); ?>" required>
-            <input type="time" name="departure_time" value="<?php echo htmlspecialchars($departure_time); ?>" required>
-            <input type="time" name="arrival_time" value="<?php echo htmlspecialchars($arrival_time); ?>" required>
-            <input type="text" name="duration" placeholder="Duration (e.g. 1h 5m)" value="<?php echo htmlspecialchars($duration); ?>" required>
-            <input type="number" step="0.01" name="price" placeholder="Fare (BDT)" value="<?php echo htmlspecialchars($price); ?>" required>
-        </div>
-        <?php if($update_mode): ?>
-            <button type="submit" name="update_flight" class="btn" style="background:#f4b400; color:black;">Update Flight Route</button>
-            <a href="admin.php" class="btn" style="background:#aaa; text-decoration:none; display:inline-block;">Cancel</a>
-        <?php else: ?>
-            <button type="submit" name="add_flight" class="btn">Save Flight Route</button>
-        <?php endif; ?>
-    </form>
 
-    <!-- নতুন রিয়েল-টাইম বুকিং হিস্ট্রি সেকশন -->
-    <h3>📋 Passenger Ticket Roster (Real-time Booking History)</h3>
-    <?php if(count($bookings) == 0): ?>
-        <p style="color: #666; font-style: italic; padding: 10px 0;">No tickets booked yet by any passenger.</p>
-    <?php else: ?>
-        <table>
-            <thead>
-                <tr>
-                    <th>Passenger Name</th>
-                    <th>Ticket PNR</th>
-                    <th>Flight Details</th>
-                    <th>Route</th>
-                    <th>Booking Date</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach($bookings as $book): ?>
-                    <tr>
-                        <td style="font-weight: 600; color: #333;"><?php echo htmlspecialchars($book['passenger_name']); ?></td>
-                        <td><span class="pnr-badge"><?php echo htmlspecialchars($book['ticket_number']); ?></span></td>
-                        <td><strong><?php echo htmlspecialchars($book['airline']); ?></strong> (<?php echo htmlspecialchars($book['flight_number']); ?>)</td>
-                        <td><?php echo htmlspecialchars($book['from_city']); ?> ➔ <?php echo htmlspecialchars($book['to_city']); ?></td>
-                        <td style="color: #666; font-weight: 500;"><?php echo htmlspecialchars($book['booking_date']); ?></td>
-                    </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
+<div class="admin-container">
+    <h2>Admin Dashboard ✈️ - Passenger Ticket Roster</h2>
+    
+    <?php if (isset($_GET['status']) && $_GET['status'] == 'success'): ?>
+        <div class="alert-success">✓ Ticket has been successfully cancelled and removed from the roster!</div>
     <?php endif; ?>
 
-    <h3>✈ Manage Current Flight Schedules</h3>
     <table>
-        <thead><tr><th>Flight No</th><th>Airline</th><th>Route</th><th>Departure</th><th>Arrival</th><th>Price</th><th>Actions</th></tr></thead>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Passenger Name</th>
+                <th>Route</th>
+                <th>Class</th>
+                <th>Total Paid</th>
+                <th>PNR Code</th>
+                <th>Actions</th> </tr>
+        </thead>
         <tbody>
-            <?php foreach($flights as $fl): ?>
+            <?php if (empty($all_bookings)): ?>
                 <tr>
-                    <td><code><?php echo htmlspecialchars($fl['flight_number']); ?></code></td>
-                    <td><strong><?php echo htmlspecialchars($fl['airline']); ?></strong></td>
-                    <td><?php echo htmlspecialchars($fl['from_city']); ?> ➔ <?php echo htmlspecialchars($fl['to_city']); ?></td>
-                    <td><?php echo htmlspecialchars($fl['departure_time']); ?></td>
-                    <td><?php echo htmlspecialchars($fl['arrival_time']); ?></td>
-                    <td style="font-weight: 600; color:#1A73E8;">BDT <?php echo number_format($fl['price']); ?></td>
-                    <td>
-                        <a href="admin.php?edit=<?php echo $fl['id']; ?>" class="btn-edit">Edit</a>
-                        <a href="admin.php?delete=<?php echo $fl['id']; ?>" class="btn-danger" onclick="return confirm('Are you sure you want to delete this route?')">Delete</a>
-                    </td>
+                    <td colspan="7" class="no-data">No flight tickets booked by passengers yet.</td>
                 </tr>
-            <?php endforeach; ?>
+            <?php else: ?>
+                <?php foreach ($all_bookings as $booking): 
+                    // ডাইনামিক কলাম অটো-ডিটেকশন (dashboard.php এর মতোই সুরক্ষিত ব্যবস্থা)
+                    $flight_from = $booking['flight_from'] ?? $booking['from_city'] ?? $booking['source'] ?? 'N/A';
+                    $flight_to = $booking['flight_to'] ?? $booking['to_city'] ?? $booking['destination'] ?? 'N/A';
+                    $passenger = $booking['passenger_name'] ?? $booking['name'] ?? 'Passenger';
+                    $seat_class = $booking['seat_class'] ?? $booking['class'] ?? 'Economy';
+                    $total_price = $booking['total_price'] ?? $booking['price'] ?? '0';
+                    $pnr = $booking['pnr'] ?? $booking['ticket_number'] ?? 'N/A';
+                    $b_id = $booking['id'] ?? $booking['booking_id'] ?? 0;
+                ?>
+                    <tr>
+                        <td><strong>#<?php echo htmlspecialchars($b_id); ?></strong></td>
+                        <td><?php echo htmlspecialchars($passenger); ?></td>
+                        <td><?php echo htmlspecialchars($flight_from); ?> ➔ <?php echo htmlspecialchars($flight_to); ?></td>
+                        <td><?php echo htmlspecialchars($seat_class); ?></td>
+                        <td><strong><?php echo is_numeric($total_price) ? number_format((float)$total_price) : htmlspecialchars($total_price); ?> BDT</strong></td>
+                        <td><span class="pnr-badge"><?php echo htmlspecialchars($pnr); ?></span></td>
+                        <td>
+                            <a href="admin.php?delete_booking_id=<?php echo $b_id; ?>" 
+                               onclick="return confirm('Are you sure you want to permanently cancel and delete this passenger ticket?');" 
+                               class="btn-delete">
+                               Delete Ticket
+                            </a>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            <?php endif; ?>
         </tbody>
     </table>
+
+    <a href="index.php" class="btn-back">⬅ Back to Main Site</a>
 </div>
+
 </body>
 </html>
