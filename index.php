@@ -27,7 +27,6 @@ $flights = $stmt->fetchAll();
             margin: 0; 
             background-color: #f0f4f9; 
             color: #333; 
-            /* ১. পেজ লোড হওয়ার সুন্দর অ্যানিমেশন */
             animation: fadeInPage 0.6s ease-in-out;
         }
 
@@ -45,45 +44,59 @@ $flights = $stmt->fetchAll();
         .btn-login { background: #1A73E8; color: white !important; padding: 10px 22px; border-radius: 25px; transition: 0.3s ease; margin-left: 20px; }
         .btn-login:hover { background: #1557b0; transform: scale(1.05); box-shadow: 0 4px 10px rgba(26,115,232,0.2); }
         
-        /* ড্যাশবোর্ড বাটনের প্রিমিয়াম স্টাইল */
         .btn-dashboard { background: #E8F0FE; color: #1A73E8 !important; padding: 8px 18px; border-radius: 20px; font-weight: 600; border: 1px solid #1A73E8; transition: 0.3s ease; }
         .btn-dashboard:hover { background: #1A73E8; color: white !important; transform: scale(1.03); }
 
-        /* Premium Hero & Search Box Section */
         .hero { background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.2)), url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1353&q=80') no-repeat center center/cover; height: 420px; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; }
         .hero h1 { font-size: 38px; margin-bottom: 20px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); font-weight: 700; }
         
         .search-container { background: white; padding: 30px; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.15); width: 850px; color: #333; margin-top: -60px; z-index: 10; position: relative; }
-        .search-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+        .search-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
         .search-field { display: flex; flex-direction: column; border: 1px solid #ddd; padding: 10px 15px; border-radius: 8px; background: #fff; }
         .search-field label { font-size: 11px; text-transform: uppercase; color: #777; font-weight: bold; margin-bottom: 5px; }
         .search-field select, .search-field input { border: none; outline: none; font-size: 16px; font-weight: 600; color: #222; background: transparent; font-family: 'Poppins', sans-serif; }
         
         .btn-search { background: #FFC107; color: #000; border: none; width: 100%; padding: 15px; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 20px; transition: 0.3s ease; }
+        .btn-search:hover { background: #e0a800; transform: scale(1.02); box-shadow: 0 6px 20px rgba(255,193,7,0.4); }
+
+        /* Container Settings */
+        .container { max-width: 900px; margin: 50px auto; padding: 0 20px; }
+
+        /* 🛠️ ফিক্সড এলাইনমেন্ট এবং এন্ট্রান্স অ্যানিমেশন সিএসএস */
+        .flight-card { 
+            background: white; border-radius: 12px; padding: 25px; margin-bottom: 20px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04); display: flex; justify-content: space-between; 
+            align-items: center; border-left: 5px solid #1A73E8; transition: all 0.4s ease; 
+            animation: slideUpFade 0.6s ease-out backwards;
+        }
+        .flight-card:hover { transform: translateY(-8px); box-shadow: 0 12px 28px rgba(0,0,0,0.12); }
         
-        /* ২. সার্চ বাটনে হোভার অ্যানিমেশন */
-        .btn-search:hover { 
-            background: #e0a800; 
-            transform: scale(1.02); 
-            box-shadow: 0 6px 20px rgba(255,193,7,0.4); 
+        /* কার্ডগুলো একটার পর একটা আসার জন্য স্ট্যাগার্ড টাইম ডিলে */
+        .flight-card:nth-child(1) { animation-delay: 0.1s; }
+        .flight-card:nth-child(2) { animation-delay: 0.2s; }
+        .flight-card:nth-child(3) { animation-delay: 0.3s; }
+        .flight-card:nth-child(4) { animation-delay: 0.4s; }
+        .flight-card:nth-child(5) { animation-delay: 0.5s; }
+
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Flight Cards Section */
-        .container { max-width: 900px; margin: 50px auto; padding: 0 20px; }
-        .flight-card { background: white; border-radius: 12px; padding: 25px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); display: flex; justify-content: space-between; align-items: center; border-left: 5px solid #1A73E8; transition: 0.3s ease; }
-        .flight-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+        /* 🛠️ সবগুলো কলামের সাইজ ফিক্সড করা হলো যেন আঁকাবাঁকা না হয় */
+        .flight-card > div { flex: 1; text-align: center; }
+        .flight-card > div:first-child { text-align: left; flex: 1.5; }
+        .flight-card > div:last-child { text-align: right; flex: 1.2; }
         
         .airline-info { font-size: 18px; font-weight: bold; color: #222; }
         .airline-sub { font-size: 12px; color: #FF9800; font-weight: bold; }
         
-        .time-block { text-align: center; }
         .time-block h2 { margin: 0; font-size: 22px; color: #111; font-weight: 600; }
         .time-block p { margin: 5px 0 0 0; color: #777; font-size: 14px; font-weight: bold; }
         
-        .duration-line { text-align: center; color: #999; font-size: 12px; position: relative; width: 140px; }
+        .duration-line { text-align: center; color: #999; font-size: 12px; position: relative; width: 100%; max-width: 140px; margin: 0 auto; }
         .duration-line::after { content: ''; display: block; width: 100%; height: 2px; background: #ccc; margin-top: 8px; }
         
-        /* ৩. চলন্ত উড়োজাহাজের (Moving Plane) চোখ ধাঁধানো অ্যানিমেশন */
         .duration-line::before {
             content: '✈';
             position: absolute;
@@ -102,17 +115,9 @@ $flights = $stmt->fetchAll();
             100% { transform: scaleX(1); }
         }
 
-        .price-block { text-align: right; }
         .price { font-size: 24px; font-weight: bold; color: #1A73E8; margin-bottom: 10px; }
-        
         .btn-book { background: #FFC107; color: black; border: none; padding: 10px 22px; border-radius: 6px; font-weight: bold; cursor: pointer; text-decoration: none; font-size: 14px; display: inline-block; transition: 0.3s ease; }
-        
-        /* ৪. বুকিং বাটনে হোভার অ্যানিমেশন */
-        .btn-book:hover { 
-            background: #e0a800; 
-            transform: scale(1.05); 
-            box-shadow: 0 4px 15px rgba(255,193,7,0.4); 
-        }
+        .btn-book:hover { background: #e0a800; transform: scale(1.05); box-shadow: 0 4px 15px rgba(255,193,7,0.4); }
     </style>
 </head>
 <body>
@@ -188,8 +193,10 @@ $flights = $stmt->fetchAll();
                     <h2><?php echo date('H:i', strtotime($flight['departure_time'])); ?></h2>
                     <p><?php echo htmlspecialchars($flight['from_city']); ?></p>
                 </div>
-                <div class="duration-line">
-                    <?php echo htmlspecialchars($flight['duration']); ?><br>Non Stop
+                <div>
+                    <div class="duration-line">
+                        <?php echo htmlspecialchars($flight['duration']); ?><br>Non Stop
+                    </div>
                 </div>
                 <div class="time-block">
                     <h2><?php echo date('H:i', strtotime($flight['arrival_time'])); ?></h2>

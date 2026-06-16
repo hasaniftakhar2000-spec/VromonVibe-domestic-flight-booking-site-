@@ -30,10 +30,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         input { width: 100%; padding: 12px 15px; margin: 12px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-family: 'Poppins', sans-serif; font-size: 14px; outline: none; transition: 0.3s; }
         input:focus { border-color: #1A73E8; box-shadow: 0 0 8px rgba(26,115,232,0.15); }
         
+        /* 🛠️ চোখের আইকনের সিএসএস */
+        .password-container { position: relative; width: 100%; }
+        .eye-icon { position: absolute; right: 15px; top: 22px; cursor: pointer; color: #666; user-select: none; font-size: 16px; }
+        
         .btn-submit { width: 100%; padding: 14px; background-color: #1A73E8; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; margin-top: 15px; cursor: pointer; transition: 0.3s ease; display: flex; justify-content: center; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(26,115,232,0.2); }
         .btn-submit:hover { background-color: #1557b0; transform: scale(1.02); }
         
-        /* স্পিনার অ্যানিমেশন সিএসএস */
         .spinner { width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: white; animation: spin 1s ease infinite; display: none; }
         @keyframes spin { to { transform: rotate(360deg); } }
         
@@ -50,10 +53,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <h2>VromonVibe ✈</h2>
         <p style="color: #666; margin-top: 5px; margin-bottom: 25px; font-size: 14px; font-weight: 500;">Create your travel account</p>
         <?php echo $message; ?>
-        <form method="POST" onsubmit="showLoading(this)">
+        <form method="POST" onsubmit="showLoading()">
             <input type="text" name="name" placeholder="Full Name" required>
             <input type="email" name="email" placeholder="Email Address" required>
-            <input type="password" name="password" placeholder="Password" required>
+            
+            <div class="password-container">
+                <input type="password" id="reg_password" name="password" placeholder="Password" required>
+                <span class="eye-icon" onclick="togglePassword('reg_password', this)">👁️</span>
+            </div>
+            
             <button type="submit" class="btn-submit" id="submitBtn">
                 <div class="spinner" id="btnSpinner"></div>
                 <span id="btnText">Sign Up</span>
@@ -63,11 +71,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     </div>
 
     <script>
-        function showLoading(form) {
+        function showLoading() {
             document.getElementById('btnSpinner').style.display = 'block';
             document.getElementById('btnText').innerText = 'Processing Safely...';
             document.getElementById('submitBtn').style.pointerEvents = 'none';
             document.getElementById('submitBtn').style.opacity = '0.8';
+        }
+
+        // 🛠️ পাসওয়ার্ড টগল ফাংশন
+        function togglePassword(inputId, icon) {
+            const input = document.getElementById(inputId);
+            if (input.type === "password") {
+                input.type = "text";
+                icon.style.color = "#1A73E8";
+            } else {
+                input.type = "password";
+                icon.style.color = "#666";
+            }
         }
     </script>
 </body>

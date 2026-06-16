@@ -41,6 +41,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         input { width: 100%; padding: 12px 15px; margin: 12px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-family: 'Poppins', sans-serif; font-size: 14px; outline: none; transition: 0.3s; }
         input:focus { border-color: #1A73E8; box-shadow: 0 0 8px rgba(26,115,232,0.15); }
         
+        /* 🛠️ চোখের আইকনের জন্য কন্টেইনার সিএসএস */
+        .password-container { position: relative; width: 100%; }
+        .eye-icon { position: absolute; right: 15px; top: 22px; cursor: pointer; color: #666; user-select: none; font-size: 16px; }
+        
         .btn-submit { width: 100%; padding: 14px; background-color: #1A73E8; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; margin-top: 15px; cursor: pointer; transition: 0.3s ease; display: flex; justify-content: center; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(26,115,232,0.2); }
         .btn-submit:hover { background-color: #1557b0; transform: scale(1.02); }
         
@@ -49,6 +53,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         
         .link { margin-top: 20px; font-size: 14px; color: #555; }
         .link a { color: #1A73E8; text-decoration: none; font-weight: 600; }
+        
+        /* 🛠️ ফরগেট পাসওয়ার্ড লিংক সিএসএস */
+        .forgot-link { text-align: right; margin-top: -5px; margin-bottom: 15px; }
+        .forgot-link a { color: #d97706; text-decoration: none; font-size: 13px; font-weight: 600; }
+        .forgot-link a:hover { text-decoration: underline; }
+        
         .demo-box { margin-top: 25px; font-size: 12px; color: #555; background: #f8fafc; padding: 12px 15px; border-radius: 8px; border-left: 4px solid #FFC107; line-height: 1.6; text-align: left; }
         .alert { padding: 12px; border-radius: 8px; font-size: 14px; margin-bottom: 20px; font-weight: 500; }
         .error { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
@@ -61,7 +71,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <?php echo $message; ?>
         <form method="POST" onsubmit="showLoading()">
             <input type="email" name="email" placeholder="Email Address" required>
-            <input type="password" name="password" placeholder="Password" required>
+            
+            <div class="password-container">
+                <input type="password" id="password_field" name="password" placeholder="Password" required>
+                <span class="eye-icon" onclick="togglePassword('password_field', this)">👁️</span>
+            </div>
+            
+            <div class="forgot-link">
+                <a href="forgot_password.php">Forgot Password?</a>
+            </div>
+            
             <button type="submit" class="btn-submit" id="submitBtn">
                 <div class="spinner" id="btnSpinner"></div>
                 <span id="btnText">Log In</span>
@@ -81,6 +100,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             document.getElementById('btnText').innerText = 'Verifying Credentials...';
             document.getElementById('submitBtn').style.pointerEvents = 'none';
             document.getElementById('submitBtn').style.opacity = '0.8';
+        }
+
+        // 🛠️ পাসওয়ার্ড টগল করার জাভাস্ক্রিপ্ট ফাংশন
+        function togglePassword(inputId, icon) {
+            const input = document.getElementById(inputId);
+            if (input.type === "password") {
+                input.type = "text";
+                icon.style.color = "#1A73E8";
+            } else {
+                input.type = "password";
+                icon.style.color = "#666";
+            }
         }
     </script>
 </body>

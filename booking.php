@@ -27,7 +27,6 @@ $ticket_class = 'Economy Class';
 $final_price = $flight['price'];
 $payment_method = 'bKash';
 
-// 🛠️ এখানে ব্র্যাকেটের ভুলটি নিখুঁতভাবে ফিক্স করা হয়েছে
 if (isset($_POST['confirm_payment'])) {
     $passenger_name = $_POST['passenger_name'];
     $ticket_class = $_POST['ticket_class'];
@@ -35,9 +34,9 @@ if (isset($_POST['confirm_payment'])) {
     $final_price = $_POST['final_price'];
     $ticket_number = 'VV-' . strtoupper(uniqid()); // ইউনিক টিকিট PNR জেনারেশন
 
-    // ডাটাবেসের অরিজিনাল কলাম অনুযায়ী কুয়েরি
-    $stmt = $pdo->prepare("INSERT INTO bookings (user_id, flight_id, passenger_name, booking_date, ticket_number, payment_status) VALUES (?, ?, ?, ?, ?, 'Paid')");
-    $stmt->execute([$_SESSION['user_id'], $flight_id, $passenger_name, $travel_date, $ticket_number]);
+    // 🛠️ ডেটাবেসের নতুন কলাম (seat_class, total_price) সহ ডাটা সেভ করা হচ্ছে
+    $stmt = $pdo->prepare("INSERT INTO bookings (user_id, flight_id, passenger_name, booking_date, ticket_number, payment_status, seat_class, total_price) VALUES (?, ?, ?, ?, ?, 'Paid', ?, ?)");
+    $stmt->execute([$_SESSION['user_id'], $flight_id, $passenger_name, $travel_date, $ticket_number, $ticket_class, $final_price]);
     
     $show_ticket = true;
 }
@@ -56,7 +55,6 @@ if (isset($_POST['confirm_payment'])) {
             padding: 20px;
             background-color: #f0f4f9; 
             color: #333; 
-            /* ১. পেজ লোড হওয়ার সুন্দর অ্যানিমেশন */
             animation: fadeInPage 0.6s ease-in-out;
         }
 
@@ -93,7 +91,6 @@ if (isset($_POST['confirm_payment'])) {
         .input-group input, .input-group select { width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 15px; font-family: 'Poppins', sans-serif; outline: none; transition: 0.3s; }
         .input-group input:focus, .input-group select:focus { border-color: #1A73E8; box-shadow: 0 0 8px rgba(26,115,232,0.15); }
         
-        /* পেমেন্ট কার্ড স্টাইল */
         .payment-methods { display: flex; gap: 15px; margin: 15px 0 25px 0; }
         .method { 
             border: 2px solid #eee; 
@@ -110,7 +107,6 @@ if (isset($_POST['confirm_payment'])) {
         }
         .method:hover { border-color: #1A73E8; transform: translateY(-2px); }
         
-        /* একটিভ পেমেন্ট কার্ডের চমৎকার গ্লো ইফ效ক্ট */
         .method.active { 
             border-color: #1A73E8; 
             color: #1A73E8; 
@@ -134,7 +130,6 @@ if (isset($_POST['confirm_payment'])) {
         }
         .btn-pay:hover { background: #16a34a; transform: scale(1.02); box-shadow: 0 6px 20px rgba(34,197,94,0.3); }
         
-        /* Premium E-Ticket Design */
         .ticket { border: 2px dashed #1A73E8; padding: 30px; border-radius: 14px; background: #fff; position: relative; }
         .ticket::before, .ticket::after { content: ''; position: absolute; width: 20px; height: 20px; background: #f0f4f9; border-radius: 50%; top: 75px; }
         .ticket::before { left: -12px; }
@@ -182,8 +177,8 @@ if (isset($_POST['confirm_payment'])) {
             <div class="input-group">
                 <label>Select Cabin Class</label>
                 <select name="ticket_class" id="ticket_class" onchange="calculateTotal()">
-                    <option value="Economy Class" data-addon="0">Economy Class (Base Fare)</option>
-                    <option value="Business Class" data-addon="3000">Business Class (+BDT 3,000 Premium)</option>
+                    <option value="Economy Class" data-multiplier="0">Economy Class (Base Fare)</option>
+                    <option value="Business Class" data-multiplier="0.4">Business Class (Premium +40%)</option>
                 </select>
             </div>
             
@@ -210,11 +205,13 @@ if (isset($_POST['confirm_payment'])) {
 
         function calculateTotal() {
             const classSelect = document.getElementById('ticket_class');
-            const addon = parseInt(classSelect.options[classSelect.selectedIndex].getAttribute('data-addon'));
-            const total = basePrice + addon;
+            const multiplier = parseFloat(classSelect.options[classSelect.selectedIndex].getAttribute('data-multiplier'));
             
-            document.getElementById('total_fare_display').value = "BDT " + total.toLocaleString();
-            document.getElementById('final_price').value = total;
+            // 🛠️ ডাইনামিক হিসাব: বেস প্রাইস + (বেস প্রাইস এর ৪০%)
+            const total = basePrice + (basePrice * multiplier);
+            
+            document.getElementById('total_fare_display').value = "BDT " + Math.round(total).toLocaleString();
+            document.getElementById('final_price').value = Math.round(total);
         }
 
         function changePayment(methodName, element) {
